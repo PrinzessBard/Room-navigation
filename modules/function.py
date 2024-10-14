@@ -62,14 +62,14 @@ def similar(first, second):
 
 
 # Функция для нахождения номера помещений из файла-перечня
-def test(start_room, end_room):
+def test(start_room, end_room, address):
     def remove_commas(string):
         trans_table = {ord('[') : None, ord(']') : None, ord('\'') : None}
         return string.translate(trans_table)
 
 
     d = {}
-    with open("C:/Users/user/Lodestar/python/modules/text/text.txt", encoding="utf-8") as file:
+    with open(f"/home/egor/Work/Room-navigation/building/{address}/text/text.txt", encoding="utf-8") as file:
         for line in file:
             key, *value = line.split()
             d[key] = value
