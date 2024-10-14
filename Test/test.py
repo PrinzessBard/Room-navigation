@@ -1,100 +1,49 @@
-def similar(first, second):
-    first = first.replace(' ', '')
-    second = second.replace(' ', '')
-    # if not len(first) == len(second):
-    #     return False
-    if len(first) - sum(l1==l2 for l1, l2 in zip(first, second)) > 3:
-        return False
-    return True
+coordinates = {}
+with open("text1.txt", encoding="utf-8") as file:
+    for line in file:
+        key, *value = line.split()
+        coordinates[key] = value
 
-# def create_table(data, header_separator=True):
-
-#     header_cols = len(data[0])
-
-#     # Сделал чтобы строки "Категории" и "Цена", вывводились
-#     # в качестве заголовка
-#     elem_col1 = [data[0][0]] + list(data[1].keys())
-#     elem_col2 = [data[0][1]] + list(map(str, list(data[1].values())))
-
-#     # Определяет ширину для каждого столбика
-
-#     col_width = [len(max(elem_col1, key=len)),
-#                  len(max(elem_col2, key=len))]
-
-#     # Границы заголовков столбцов
-#     separator = "-+-".join('-' * n for n in col_width)
-
-#     # Создание таблицы
-#     i = 0
-#     for col in range(len(elem_col1)):
-#         if i == 1:
-#             print(separator)
-#         result = [elem_col1[col].rjust(col_width[0]),
-#                   elem_col2[col].rjust(col_width[1])]
-#         i += 1
-#         print(" | ".join(result))
+new_coordinates = {}
+for key, item in coordinates.items():
+    new_key = int(key)
+    new_coordinates[new_key] = [[int(item[0]), int(item[1])], [int(item[2]), int(item[3])], [int(item[4]), int(item[5])], [int(item[6]), int(item[7])]]
 
 
-def test(start_room_name, end_room_name):
-    def remove_commas(string):
-        trans_table = {ord('[') : None, ord(']') : None, ord('\'') : None}
-        return string.translate(trans_table)
 
-    d = {}
-    with open("text1.txt", encoding="utf-8") as file:
-        for line in file:
-            key, *value = line.split()
-            d[key] = value
-
-
-    # print(d)
-
-    # start_room = input()
-    # end_room = input()
-
-    start_room_number = 0
-    end_room_number = 0
-
-    for key, item in d.items():
-        x = remove_commas(str(item))
-        new_item = x.replace("_", " ")
-        test = similar(start_room_name, new_item)
-        if start_room_name == new_item:
-            start_room_number = key
-        elif test == True:
-            start_room_number = key
+for key, item in new_coordinates.items():
+    print(item)
+    for i in item:
+        print(i) # (5, 10)
+        if i[0] == 0 and i[1] == 0:
+            print(i[0], "   ", i[1])
+            item.remove(i) 
         else:
-            continue
+            pass
 
 
-    for key, item in d.items():
-        x = remove_commas(str(item))
-        new_item = x.replace("_", " ")
-        test = similar(end_room_name, new_item)
-        if end_room_name == new_item:
-            end_room_number = key
-        elif test == True:
-            end_room_number = key
+for key, item in new_coordinates.items():
+    print(item)
+    for i in item:
+        print(i) # (5, 10)
+        if i[0] == 0 and i[1] == 0:
+            print(i[0], "   ", i[1])
+            item.remove(i) 
         else:
-            continue
-    
-    # data = [
-    #     ["Номер", "Название"],
-    #     {}
-    # ]
+            pass
 
-    # for key, item in d.items():
-    #     x = remove_commas(str(item))
-    #     new_item = x.replace("_", " ")
-    #     data[1][key] = new_item
-    
-    # print(create_table(data))
-    # print(data)
+ 
+return new_coordinates
 
-    return start_room_number, end_room_number
+# {'1:': ['[(5,', '10)]'], '2:': ['[(6,', '10)]']}
+# {1: (5, 10), 2: (6, 10)}
+# {1: [(5, 10), (0, 0), (0, 0), (0, 0)]}
 
-
-start_room, end_room = test("Кажинет директора", "Мазыка")
-print(start_room, end_room)
-
-# print(similar("кабинет директора", "кабинетдиректора"))
+# (5, 10)
+# (0, 0)
+# (0, 0)
+# (0, 0)
+# (6, 10)
+# (0, 0)
+# (0, 0)
+# (0, 0)

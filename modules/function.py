@@ -1,3 +1,6 @@
+import sys
+sys.path.append('egor@egor-laptop:~/Work/Room-navigation')
+
 import cv2
 import numpy as np
 import heapq
@@ -61,6 +64,61 @@ def similar(first, second):
     return True
 
 
+def graph_from_file(file):
+    coordinates = {}
+    with open(file, encoding="utf-8") as file:
+        for line in file:
+            key, *value = line.split()
+            coordinates[key] = value
+
+    new_coordinates = {}
+    for key, item in coordinates.items():
+        new_key = int(key)
+        new_coordinates[new_key] = [[int(item[0]), int(item[1])], [int(item[2]), int(item[3])], [int(item[4]), int(item[5])], [int(item[6]), int(item[7])]]
+
+
+
+    for key, item in new_coordinates.items():
+        # print(item)
+        for i in item:
+            # print(i) # (5, 10)
+            if i[0] == 0 and i[1] == 0:
+                # print(i[0], "   ", i[1])
+                item.remove(i) 
+            else:
+                pass
+
+
+    for key, item in new_coordinates.items():
+        # print(item)
+        for i in item:
+            # print(i) # (5, 10)
+            if i[0] == 0 and i[1] == 0:
+                # print(i[0], "   ", i[1])
+                item.remove(i) 
+            else:
+                pass
+
+     
+    return new_coordinates
+
+
+
+def coordinates_from_file(file):
+    old_dict = {}
+    with open(file, encoding="utf-8") as file:
+        for line in file:
+            key, *value = line.split()
+            old_dict[key] = value
+
+    new_dict = {}
+    for key, item in old_dict.items():
+        new_key = int(key)
+        new_dict[new_key] = (int(item[0]), int(item[1]))
+
+    return new_dict
+
+
 # Функция для нахождения номера помещений из файла-перечня
 def test(start_room, end_room, address):
     def remove_commas(string):
@@ -102,3 +160,35 @@ def test(start_room, end_room, address):
 
 
     return int(start_room_number), int(end_room_number)
+
+
+def processing_data_user_and_image():
+    start_room_name = input("Введите название начальной комнаты: ").lower()
+    end_room_name = input("Введите название конечной комнаты: ").lower()
+    address = input("Введите адреса здания: ")
+
+    graph = graph_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/graph.txt')
+    coordinates = coordinates_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/coordinates.txt')
+
+    # Загрузка карты здания (изображение)
+    image = cv2.imread(f'/home/egor/Work/Room-navigation/building/{address}/image/level_1.jpg')#
+
+    start_room, end_room = test(start_room_name, end_room_name, address)
+
+    if start_room not in graph:
+        raise ValueError(f"Комната {start_room} отсутствует в графе.")
+    if end_room not in graph:
+        raise ValueError(f"Комната {end_room} отсутствует в графе.")
+
+    # Поиск кратчайшего пути
+    path = dijkstra(graph, start_room, end_room)
+    print(f"Кратчайший путь: {path}")
+
+    # Отрисовка пути на карте
+    result_image = draw_path_on_map(image, path, coordinates)
+
+    # Сохранение результата
+    output_file = 'building/school_3/image/building_map_with_path.png'
+    cv2.imwrite(output_file, result_image)
+    # print(f"Изображение сохранено как {output_file}")
+    # os.system(f"{output_file}")
