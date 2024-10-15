@@ -57,9 +57,7 @@ def draw_path_on_map(image, path, coordinates):
 def similar(first, second):
     first = first.replace(' ', '')
     second = second.replace(' ', '')
-    # if not len(first) == len(second):
-    #     return False
-    if len(first) - sum(l1==l2 for l1, l2 in zip(first, second)) > 3:
+    if len(first) - sum(l1==l2 for l1, l2 in zip(first, second)) > 5:
         return False
     return True
 
@@ -79,22 +77,16 @@ def graph_from_file(file):
 
 
     for key, item in new_coordinates.items():
-        # print(item)
         for i in item:
-            # print(i) # (5, 10)
             if i[0] == 0 and i[1] == 0:
-                # print(i[0], "   ", i[1])
                 item.remove(i) 
             else:
                 pass
 
 
     for key, item in new_coordinates.items():
-        # print(item)
         for i in item:
-            # print(i) # (5, 10)
             if i[0] == 0 and i[1] == 0:
-                # print(i[0], "   ", i[1])
                 item.remove(i) 
             else:
                 pass
@@ -117,6 +109,15 @@ def coordinates_from_file(file):
         new_dict[new_key] = (int(item[0]), int(item[1]))
 
     return new_dict
+
+
+def check_list_dir(list_dir, address):
+    for i in range(0, len(list_dir)):
+            if similar(address, list_dir[i]) == True:
+                return list_dir[i]
+            else:
+                continue
+    return False
 
 
 # Функция для нахождения номера помещений из файла-перечня
@@ -165,7 +166,19 @@ def test(start_room, end_room, address):
 def processing_data_user_and_image():
     start_room_name = input("Введите название начальной комнаты: ").lower()
     end_room_name = input("Введите название конечной комнаты: ").lower()
+
+    list_dir = os.listdir("/home/egor/Work/Room-navigation/building/")
+    print(list_dir)
+
     address = input("Введите адреса здания: ")
+
+    # address = ""
+    # if check_list_dir(list_dir, address_name) != False:
+    #     address = check_list_dir(list_dir, address_name)
+    # else:
+    #     return
+        
+
 
     graph = graph_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/graph.txt')
     coordinates = coordinates_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/coordinates.txt')
