@@ -5,6 +5,7 @@ import cv2
 import numpy as np
 import heapq
 import os
+import jellyfish
 
 
 # Алгоритм Дейкстера для нахождения кратчайшего пути по графу
@@ -52,6 +53,7 @@ def draw_path_on_map(image, path, coordinates):
         cv2.line(image, start_coord, end_coord, (0, 255, 0), 3)  # красная линия, толщина 3
     return image
 
+########################################################################################################## 
 
 # Функция для сравнения значений и нахождения различий и сходств
 def similar(first, second):
@@ -61,6 +63,28 @@ def similar(first, second):
         return False
     return True
 
+# Функция для сравнения значений и нахождения различий и сходств ПАПОК в иерархии файлов
+def similar_folder(word, list_dir):
+    result = [] 
+    for i in list_dir:
+        result.append(jellyfish.levenshtein_distance(word, i))
+
+    min_num = result[0]
+    min_number_in_result = 0
+
+    for i in range(len(result)):
+        if min_num > result[i]:
+            min_num = result[i]
+            min_number_in_result = i
+        else:
+            continue
+
+    if min_num > 3:
+        return False
+    else:
+        return list_dir[min_number_in_result]
+
+###########################################################################################################
 
 def graph_from_file(file):
     coordinates = {}
@@ -111,13 +135,7 @@ def coordinates_from_file(file):
     return new_dict
 
 
-def check_list_dir(list_dir, address):
-    for i in range(0, len(list_dir)):
-            if similar(address, list_dir[i]) == True:
-                return list_dir[i]
-            else:
-                continue
-    return False
+######################################################################################################################
 
 
 # Функция для нахождения номера помещений из файла-перечня
@@ -170,20 +188,19 @@ def processing_data_user_and_image():
     list_dir = os.listdir("/home/egor/Work/Room-navigation/building/")
     print(list_dir)
 
-    address = input("Введите адреса здания: ")
+    address_name = input("Введите адрес здания: ")
 
-    # address = ""
-    # if check_list_dir(list_dir, address_name) != False:
-    #     address = check_list_dir(list_dir, address_name)
-    # else:
-    #     return
+    address = ""
+    if similar_folder(address_name, list_dir) != False:
+        address = similar_folder(address_name, list_dir)
+    else:
+        return 0
         
 
 
     graph = graph_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/graph.txt')
     coordinates = coordinates_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/coordinates.txt')
 
-    # Загрузка карты здания (изображение)
     image = cv2.imread(f'/home/egor/Work/Room-navigation/building/{address}/image/level_1.jpg')#
 
     start_room, end_room = test(start_room_name, end_room_name, address)
@@ -193,15 +210,10 @@ def processing_data_user_and_image():
     if end_room not in graph:
         raise ValueError(f"Комната {end_room} отсутствует в графе.")
 
-    # Поиск кратчайшего пути
     path = dijkstra(graph, start_room, end_room)
     print(f"Кратчайший путь: {path}")
 
-    # Отрисовка пути на карте
     result_image = draw_path_on_map(image, path, coordinates)
 
-    # Сохранение результата
     output_file = 'building/school_3/image/building_map_with_path.png'
     cv2.imwrite(output_file, result_image)
-    # print(f"Изображение сохранено как {output_file}")
-    # os.system(f"{output_file}")
