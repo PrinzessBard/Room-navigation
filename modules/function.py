@@ -181,13 +181,22 @@ def test(start_room, end_room, address):
     return int(start_room_number), int(end_room_number)
 
 
-def processing_data_user_and_image():
-    start_room_name = input("Введите название начальной комнаты: ").lower()
-    end_room_name = input("Введите название конечной комнаты: ").lower()
+def check_level(start_room_name, end_room_name, start_room_level, end_room_level, address):
 
+    for i in range(2):
+        if i == 1:
+            end_room = "Лестница_1".lower()
+            save_image(address, start_room_name, end_room, start_room_level)
+        elif i == 2:
+            start_room = "Лестница_1".lower()
+            save_image(address, start_room, end_room_name, end_room_level)
+
+
+
+def processing_data_user_and_image():
     list_dir = os.listdir("/home/egor/Work/Room-navigation/building/")
     print(list_dir)
-
+    
     address_name = input("Введите адрес здания: ")
 
     address = ""
@@ -195,8 +204,9 @@ def processing_data_user_and_image():
         address = similar_folder(address_name, list_dir)
     else:
         return 0
-        
 
+    start_room_name = input("Введите название начальной комнаты: ").lower()
+    end_room_name = input("Введите название конечной комнаты: ").lower()
 
     graph = graph_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/graph.txt')
     coordinates = coordinates_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/coordinates.txt')
