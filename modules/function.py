@@ -139,14 +139,14 @@ def coordinates_from_file(file):
 
 
 # Функция для нахождения номера помещений из файла-перечня
-def test(start_room, end_room, address):
+def get_room_number(start_room, end_room, address, room_level):
     def remove_commas(string):
         trans_table = {ord('[') : None, ord(']') : None, ord('\'') : None}
         return string.translate(trans_table)
 
 
     d = {}
-    with open(f"/home/egor/Work/Room-navigation/building/{address}/text/text.txt", encoding="utf-8") as file:
+    with open(f"/home/egor/Work/Room-navigation/building/{address}/text/text_level_{room_level}.txt", encoding="utf-8") as file:
         for line in file:
             key, *value = line.split()
             d[key] = value
@@ -181,49 +181,50 @@ def test(start_room, end_room, address):
     return int(start_room_number), int(end_room_number)
 
 
-def check_level(start_room_name, end_room_name, start_room_level, end_room_level, address):
 
-    for i in range(2):
-        if i == 1:
-            end_room = "Лестница_1".lower()
-            save_image(address, start_room_name, end_room, start_room_level)
-        elif i == 2:
-            start_room = "Лестница_1".lower()
-            save_image(address, start_room, end_room_name, end_room_level)
+def save_image(address, room_level,  start_room_name, end_room_name):
+    graph = graph_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/level_{room_level}/graph.txt')
+    coordinates = coordinates_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/level_{room_level}/coordinates.txt')
 
+    image = cv2.imread(f'/home/egor/Work/Room-navigation/building/{address}/image/level_{room_level}.jpg')
 
-
-def processing_data_user_and_image():
-    list_dir = os.listdir("/home/egor/Work/Room-navigation/building/")
-    print(list_dir)
-    
-    address_name = input("Введите адрес здания: ")
-
-    address = ""
-    if similar_folder(address_name, list_dir) != False:
-        address = similar_folder(address_name, list_dir)
-    else:
-        return 0
-
-    start_room_name = input("Введите название начальной комнаты: ").lower()
-    end_room_name = input("Введите название конечной комнаты: ").lower()
-
-    graph = graph_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/graph.txt')
-    coordinates = coordinates_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/coordinates.txt')
-
-    image = cv2.imread(f'/home/egor/Work/Room-navigation/building/{address}/image/level_1.jpg')#
-
-    start_room, end_room = test(start_room_name, end_room_name, address)
-
-    if start_room not in graph:
-        raise ValueError(f"Комната {start_room} отсутствует в графе.")
-    if end_room not in graph:
-        raise ValueError(f"Комната {end_room} отсутствует в графе.")
+    start_room, end_room = get_room_number(start_room_name, end_room_name, address, room_level)
 
     path = dijkstra(graph, start_room, end_room)
     print(f"Кратчайший путь: {path}")
 
     result_image = draw_path_on_map(image, path, coordinates)
 
-    output_file = 'building/school_3/image/building_map_with_path.png'
+    output_file = f'building/{address}/image/level_path_{room_level}.png'
     cv2.imwrite(output_file, result_image)
+
+
+def processing_data_user_and_image():
+    building_dir = os.listdir("/home/egor/Work/Room-navigation/building/")
+    print(building_dir)
+
+    address_name = input("Введите адрес здания: ")
+
+    address = ""
+    if similar_folder(address_name, building_dir) != False:
+        address = similar_folder(address_name, building_dir)
+    else:
+        return 0
+
+    image_dir = os.listdir(f"/home/egor/Work/Room-navigation/building/{address}/image")
+    if len(image_dir) > 1:
+        start_room_name = input("Введите название начальной комнаты: ").lower()
+        start_room_level = int(input("Введите номер этажа первой комнаты: "))
+        end_room_name = input("Введите название конечной комнаты: ").lower()
+        end_room_level = int(input("Введите номер этажа второй комнаты: "))
+
+        for i in range(2):
+            if i == 1:
+                save_image(address, start_room_level,  start_room_name, "лестница_1")
+            else:
+                save_image(address, end_room_level,  "лестница_1", end_room_name)
+    else:
+        start_room_name = input("Введите название начальной комнаты: ").lower()
+        end_room_name = input("Введите название конечной комнаты: ").lower()
+
+        save_image(address, 1, start_room_name, end_room_name)
