@@ -143,10 +143,113 @@ def coordinates_from_file(file):
 
 
 # Функция для нахождения номера помещений из файла-перечня
-def get_room_number(start_room, end_room, address, room_level):
+def get_room_number(start_room, end_room, address, room_level, d):
     def remove_commas(string):
         trans_table = {ord('[') : None, ord(']') : None, ord('\'') : None}
         return string.translate(trans_table)
+
+    if end_room != "" and start_room != "":
+
+        d = {}
+        with open(f"/home/egor/Work/Room-navigation/building/school_3/text/text_level_1.txt", encoding="utf-8") as file:
+            for line in file:
+                key, *value = line.split()
+                d[key] = value
+
+        start_room_number = 0
+        end_room_number = 0
+
+        for key, item in d.items():
+            x = remove_commas(str(item))
+            new_item = x.replace("_", " ")
+            test = similar(start_room, new_item)
+            if start_room == new_item:
+                start_room_number = key
+            elif test == True:
+                start_room_number = key
+            else:
+                continue
+
+
+        for key, item in d.items():
+            x = remove_commas(str(item))
+            new_item = x.replace("_", " ")
+            test = similar(end_room, new_item)
+            if end_room == new_item:
+                end_room_number = key
+            elif test == True:
+                end_room_number = key
+            else:
+                continue
+
+
+        return int(start_room_number), int(end_room_number)
+
+    elif start_room == "":
+        for key, item in d.items():
+            x = remove_commas(str(item))
+            new_item = x.replace("_", " ")
+            test = similar(end_room, new_item)
+            if end_room == new_item:
+                end_room_number = key
+            elif test == True:
+                end_room_number = key
+            else:
+                continue
+
+        return int(end_room_number)
+
+    elif end_room == "":
+        start_room_number = 0
+
+        for key, item in d.items():
+            x = remove_commas(str(item))
+            new_item = x.replace("_", " ")
+            test = similar(start_room, new_item)
+            if start_room == new_item:
+                start_room_number = key
+            elif test == True:
+                start_room_number = key
+            else:
+                continue
+
+        return int(start_room_number)
+
+
+
+def checking_nearby_points(start, end, room_level, address):
+
+    # start, end = get_room_number(start, end, address, room_level)
+    def val(num, her):
+        ok = her.index(num) + 1
+        if ok == len(her):
+            return False
+        else:
+            number = her[(her.index(num) + 1)]
+            return number
+
+
+
+    def get_summa_p(start, end, address, room_level):
+        graph = graph_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/level_{room_level}/graph.txt')
+
+        summa = 0
+        her = dijkstra(graph, start, end)
+
+        for i in her:
+            for j in graph[i]:
+                hui = val(i, her)
+                if hui == False:
+                    break
+                else:
+                    if hui != j[0]:
+                        continue
+                    else:
+                        summa = summa + j[1]
+
+        # print(summa)
+
+        return summa
 
 
     d = {}
@@ -155,53 +258,98 @@ def get_room_number(start_room, end_room, address, room_level):
             key, *value = line.split()
             d[key] = value
 
-    start_room_number = 0
-    end_room_number = 0
 
-    for key, item in d.items():
-        x = remove_commas(str(item))
-        new_item = x.replace("_", " ")
-        test = similar(start_room, new_item)
-        if start_room == new_item:
-            start_room_number = key
-        elif test == True:
-            start_room_number = key
+    end = get_room_number(end, "", "", "", d)
+
+    value = {}
+
+    while True:
+        try:
+            test = get_room_number(start, "", "", "", d)
+            value[test] =  test
+            del d[str(test)]
+        except KeyError:
+            break
+
+    del value[0]
+
+    summa = {}
+
+    for key, item in value.items():
+        summa[key] = get_summa_p(item, end, address, room_level)
+
+    minimal = 1000
+
+    for key, item in summa.items():
+        if minimal > item:
+            minimal = key
         else:
             continue
 
 
-    for key, item in d.items():
-        x = remove_commas(str(item))
-        new_item = x.replace("_", " ")
-        test = similar(end_room, new_item)
-        if end_room == new_item:
-            end_room_number = key
-        elif test == True:
-            end_room_number = key
-        else:
-            continue
-
-
-    return int(start_room_number), int(end_room_number)
+    return minimal
 
 
 
-def save_image(address, room_level,  start_room_name, end_room_name):
-    graph = graph_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/level_{room_level}/graph.txt')
-    coordinates = coordinates_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/level_{room_level}/coordinates.txt')
+def save_image(address, room_level,  start_room_name, end_room):
+    d = {}
+    with open(f"/home/egor/Work/Room-navigation/building/{address}/text/text_level_{room_level}.txt", encoding="utf-8") as file:
+        for line in file:
+            key, *value = line.split()
+            d[key] = value
 
-    image = cv2.imread(f'/home/egor/Work/Room-navigation/building/{address}/image/level_{room_level}.jpg')
+    if isinstance(end_room, int): 
+        graph = graph_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/level_{room_level}/graph.txt')
+        coordinates = coordinates_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/level_{room_level}/coordinates.txt')
 
-    start_room, end_room = get_room_number(start_room_name, end_room_name, address, room_level)
+        image = cv2.imread(f'/home/egor/Work/Room-navigation/building/{address}/image/level_{room_level}.jpg')
 
-    path = dijkstra(graph, start_room, end_room)
-    print(f"Кратчайший путь: {path}")
+        start_room = get_room_number(start_room_name, "", address, room_level, d)
 
-    result_image = draw_path_on_map(image, path, coordinates)
+        path = dijkstra(graph, start_room, end_room)
+        print(f"Кратчайший путь: {path}")
 
-    output_file = f'building/{address}/image/level_path_{room_level}.png'
-    cv2.imwrite(output_file, result_image)
-    os.system(f'xdg-open {output_file}')
+        result_image = draw_path_on_map(image, path, coordinates)
+
+        output_file = f'building/{address}/image/level_path_{room_level}.png'
+        cv2.imwrite(output_file, result_image)
+        os.system(f'xdg-open {output_file}')
+
+    elif isinstance(start_room_name, int):
+        graph = graph_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/level_{room_level}/graph.txt')
+        coordinates = coordinates_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/level_{room_level}/coordinates.txt')
+
+        image = cv2.imread(f'/home/egor/Work/Room-navigation/building/{address}/image/level_{room_level}.jpg')
+
+        end_room = get_room_number("", end_room, address, room_level, d)
+
+        # print(start_room_name, end_room)
+
+        path = dijkstra(graph, start_room_name, end_room)
+        print(f"Кратчайший путь: {path}")
+
+        result_image = draw_path_on_map(image, path, coordinates)
+
+        output_file = f'building/{address}/image/level_path_{room_level}.png'
+        cv2.imwrite(output_file, result_image)
+        os.system(f'xdg-open {output_file}')
+
+    else:
+        graph = graph_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/level_{room_level}/graph.txt')
+        coordinates = coordinates_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/level_{room_level}/coordinates.txt')
+
+        image = cv2.imread(f'/home/egor/Work/Room-navigation/building/{address}/image/level_{room_level}.jpg')
+
+        start_room, end_room = get_room_number(start_room_name, end_room, address, room_level, {})
+
+        path = dijkstra(graph, start_room, end_room)
+        print(f"Кратчайший путь: {path}")
+
+        result_image = draw_path_on_map(image, path, coordinates)
+
+        output_file = f'building/{address}/image/level_path_{room_level}.png'
+        cv2.imwrite(output_file, result_image)
+        os.system(f'xdg-open {output_file}') 
 
 
 def check_in_list(name, file):
@@ -241,11 +389,16 @@ def processing_data_user_and_image():
         end_room_name = input("Введите название конечной комнаты: ").lower()
         end_room_level = int(input("Введите номер этажа второй комнаты: "))
 
-        for i in range(2):
-            if i == 1:
-                save_image(address, start_room_level,  start_room_name, "лестница")
-            else:
-                save_image(address, end_room_level,  "лестница", end_room_name)
+        if start_room_level != end_room_level:
+            for i in range(1, 3):
+                if i == 1:
+                    test = checking_nearby_points("лестница", start_room_name, start_room_level, address)
+                    print(test)
+                    save_image(address, start_room_level,  start_room_name, checking_nearby_points("лестница", start_room_name, start_room_level, address))
+                else:
+                    save_image(address, end_room_level,  checking_nearby_points("лестница", start_room_name, start_room_level, address), end_room_name)
+        else:
+            save_image(address, start_room_level, start_room_name, end_room_name)
 
     else:
         start_room_name = input("Введите название начальной комнаты: ").lower()
