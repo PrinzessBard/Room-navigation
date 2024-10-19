@@ -204,6 +204,23 @@ def save_image(address, room_level,  start_room_name, end_room_name):
     os.system(f'xdg-open {output_file}')
 
 
+def check_in_list(name, file):
+    d = {}
+    with open(file, encoding="utf-8") as file:
+        for line in file:
+            key, *value = line.split()
+            d[key] = value
+
+    for key, item in d.items():
+        item = item.lower()
+        if name == item:
+            return True
+        else:
+            continue
+
+    return False
+
+
 def processing_data_user_and_image():
     building_dir = os.listdir("/home/egor/Work/Room-navigation/building/")
     print(building_dir)
@@ -217,6 +234,7 @@ def processing_data_user_and_image():
         return 0
 
     image_dir = os.listdir(f"/home/egor/Work/Room-navigation/building/{address}/image")
+
     if len(image_dir) > 1:
         start_room_name = input("Введите название начальной комнаты: ").lower()
         start_room_level = int(input("Введите номер этажа первой комнаты: "))
@@ -225,12 +243,13 @@ def processing_data_user_and_image():
 
         for i in range(2):
             if i == 1:
-                save_image(address, start_room_level,  start_room_name, "лестница_1")
+                save_image(address, start_room_level,  start_room_name, "лестница")
             else:
-                save_image(address, end_room_level,  "лестница_1", end_room_name)
+                save_image(address, end_room_level,  "лестница", end_room_name)
 
     else:
         start_room_name = input("Введите название начальной комнаты: ").lower()
         end_room_name = input("Введите название конечной комнаты: ").lower()
 
         save_image(address, 1, start_room_name, end_room_name)
+
