@@ -59,9 +59,13 @@ def draw_path_on_map(image, path, coordinates):
 def similar(first, second):
     first = first.replace(' ', '')
     second = second.replace(' ', '')
-    if len(first) - sum(l1==l2 for l1, l2 in zip(first, second)) > 5:
+    # if len(first) - sum(l1==l2 for l1, l2 in zip(first, second)) > 5:
+    #     return False
+    # return True
+    if jellyfish.levenshtein_distance(first, second) > 4:
         return False
-    return True
+    else:
+        return True
 
 # Функция для сравнения значений и нахождения различий и сходств ПАПОК в иерархии файлов
 def similar_folder(word, list_dir):
@@ -197,6 +201,7 @@ def save_image(address, room_level,  start_room_name, end_room_name):
 
     output_file = f'building/{address}/image/level_path_{room_level}.png'
     cv2.imwrite(output_file, result_image)
+    os.system(f'xdg-open {output_file}')
 
 
 def processing_data_user_and_image():
@@ -223,6 +228,7 @@ def processing_data_user_and_image():
                 save_image(address, start_room_level,  start_room_name, "лестница_1")
             else:
                 save_image(address, end_room_level,  "лестница_1", end_room_name)
+
     else:
         start_room_name = input("Введите название начальной комнаты: ").lower()
         end_room_name = input("Введите название конечной комнаты: ").lower()
