@@ -247,7 +247,7 @@ def checking_nearby_points(start, end, room_level, address):
                     else:
                         summa = summa + j[1]
 
-        # print(summa)
+        print(summa)
 
         return summa
 
