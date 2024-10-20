@@ -151,7 +151,7 @@ def get_room_number(start_room, end_room, address, room_level, d):
     if end_room != "" and start_room != "":
 
         d = {}
-        with open(f"/home/egor/Work/Room-navigation/building/school_3/text/text_level_1.txt", encoding="utf-8") as file:
+        with open(f"/home/egor/Work/Room-navigation/building/{address}/text/text_level_{room_level}.txt", encoding="utf-8") as file:
             for line in file:
                 key, *value = line.split()
                 d[key] = value
@@ -259,13 +259,13 @@ def checking_nearby_points(start, end, room_level, address):
             d[key] = value
 
 
-    end = get_room_number(end, "", "", "", d)
+    end = get_room_number(end, "", address, room_level, d)
 
     value = {}
 
     while True:
         try:
-            test = get_room_number(start, "", "", "", d)
+            test = get_room_number(start, "", address, room_level, d)
             value[test] =  test
             del d[str(test)]
         except KeyError:
