@@ -53,19 +53,16 @@ def draw_path_on_map(image, path, coordinates):
         cv2.line(image, start_coord, end_coord, (0, 255, 0), 3)  # красная линия, толщина 3
     return image
 
-########################################################################################################## 
 
 # Функция для сравнения значений и нахождения различий и сходств
 def similar(first, second):
     first = first.replace(' ', '')
     second = second.replace(' ', '')
-    # if len(first) - sum(l1==l2 for l1, l2 in zip(first, second)) > 5:
-    #     return False
-    # return True
     if jellyfish.levenshtein_distance(first, second) > 4:
         return False
     else:
         return True
+
 
 # Функция для сравнения значений и нахождения различий и сходств ПАПОК в иерархии файлов
 def similar_folder(word, list_dir):
@@ -88,9 +85,43 @@ def similar_folder(word, list_dir):
     else:
         return list_dir[min_number_in_result]
 
-###########################################################################################################
 
+# Функция для получения словаря графа из файла
 def graph_from_file(file):
+    graph = {}
+    with open(file, encoding="utf-8") as file:
+        for line in file:
+            key, *value = line.split()
+            graph[key] = value
+
+    new_graph = {}
+    for key, item in graph.items():
+        new_key = int(key)
+        new_graph[new_key] = [[int(item[0]), int(item[1])], [int(item[2]), int(item[3])], [int(item[4]), int(item[5])], [int(item[6]), int(item[7])]]
+
+
+
+    for key, item in new_graph.items():
+        for i in item:
+            if i[0] == 0 and i[1] == 0:
+                item.remove(i) 
+            else:
+                pass
+
+
+    for key, item in new_graph.items():
+        for i in item:
+            if i[0] == 0 and i[1] == 0:
+                item.remove(i) 
+            else:
+                pass
+
+     
+    return new_graph
+
+
+# Функция для получения словаря координат из файла
+def coordinates_from_file(file):
     coordinates = {}
     with open(file, encoding="utf-8") as file:
         for line in file:
@@ -100,46 +131,9 @@ def graph_from_file(file):
     new_coordinates = {}
     for key, item in coordinates.items():
         new_key = int(key)
-        new_coordinates[new_key] = [[int(item[0]), int(item[1])], [int(item[2]), int(item[3])], [int(item[4]), int(item[5])], [int(item[6]), int(item[7])]]
+        new_coordinates[new_key] = (int(item[0]), int(item[1]))
 
-
-
-    for key, item in new_coordinates.items():
-        for i in item:
-            if i[0] == 0 and i[1] == 0:
-                item.remove(i) 
-            else:
-                pass
-
-
-    for key, item in new_coordinates.items():
-        for i in item:
-            if i[0] == 0 and i[1] == 0:
-                item.remove(i) 
-            else:
-                pass
-
-     
     return new_coordinates
-
-
-
-def coordinates_from_file(file):
-    old_dict = {}
-    with open(file, encoding="utf-8") as file:
-        for line in file:
-            key, *value = line.split()
-            old_dict[key] = value
-
-    new_dict = {}
-    for key, item in old_dict.items():
-        new_key = int(key)
-        new_dict[new_key] = (int(item[0]), int(item[1]))
-
-    return new_dict
-
-
-######################################################################################################################
 
 
 # Функция для нахождения номера помещений из файла-перечня
@@ -149,15 +143,11 @@ def get_room_number(start_room, end_room, address, room_level, d):
         return string.translate(trans_table)
 
     if end_room != "" and start_room != "":
-
         d = {}
         with open(f"/home/egor/Work/Room-navigation/building/{address}/text/text_level_{room_level}.txt", encoding="utf-8") as file:
             for line in file:
                 key, *value = line.split()
                 d[key] = value
-
-        start_room_number = 0
-        end_room_number = 0
 
         for key, item in d.items():
             x = remove_commas(str(item))
@@ -216,16 +206,16 @@ def get_room_number(start_room, end_room, address, room_level, d):
         return int(start_room_number)
 
 
-
+# Функция для проверки одинаковых значений по словарб и нахождению ближайшего к пользователю
 def checking_nearby_points(start, end, room_level, address):
 
     # start, end = get_room_number(start, end, address, room_level)
-    def val(num, her):
-        ok = her.index(num) + 1
-        if ok == len(her):
+    def val(i, array_points):
+        point_pos = array_points.index(i) + 1
+        if point_pos == len(array_points):
             return False
         else:
-            number = her[(her.index(num) + 1)]
+            number = array_points[(array_points.index(i) + 1)]
             return number
 
 
@@ -234,11 +224,11 @@ def checking_nearby_points(start, end, room_level, address):
         graph = graph_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/level_{room_level}/graph.txt')
 
         summa = 0
-        her = dijkstra(graph, start, end)
+        array_points = dijkstra(graph, start, end)
 
-        for i in her:
+        for i in array_points:
             for j in graph[i]:
-                hui = val(i, her)
+                hui = val(i, array_points)
                 if hui == False:
                     break
                 else:
@@ -246,8 +236,6 @@ def checking_nearby_points(start, end, room_level, address):
                         continue
                     else:
                         summa = summa + j[1]
-
-        print(summa)
 
         return summa
 
@@ -290,7 +278,7 @@ def checking_nearby_points(start, end, room_level, address):
     return minimal
 
 
-
+# Функция для сохранения изображение в файловую систему
 def save_image(address, room_level,  start_room_name, end_room):
     d = {}
     with open(f"/home/egor/Work/Room-navigation/building/{address}/text/text_level_{room_level}.txt", encoding="utf-8") as file:
@@ -298,60 +286,31 @@ def save_image(address, room_level,  start_room_name, end_room):
             key, *value = line.split()
             d[key] = value
 
+    graph = graph_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/level_{room_level}/graph.txt')
+    coordinates = coordinates_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/level_{room_level}/coordinates.txt')
+    image = cv2.imread(f'/home/egor/Work/Room-navigation/building/{address}/image/level_{room_level}.jpg')
+
     if isinstance(end_room, int): 
-        graph = graph_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/level_{room_level}/graph.txt')
-        coordinates = coordinates_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/level_{room_level}/coordinates.txt')
-
-        image = cv2.imread(f'/home/egor/Work/Room-navigation/building/{address}/image/level_{room_level}.jpg')
-
         start_room = get_room_number(start_room_name, "", address, room_level, d)
-
         path = dijkstra(graph, start_room, end_room)
-        print(f"Кратчайший путь: {path}")
-
-        result_image = draw_path_on_map(image, path, coordinates)
-
-        output_file = f'building/{address}/image/level_path_{room_level}.png'
-        cv2.imwrite(output_file, result_image)
-        os.system(f'xdg-open {output_file}')
 
     elif isinstance(start_room_name, int):
-        graph = graph_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/level_{room_level}/graph.txt')
-        coordinates = coordinates_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/level_{room_level}/coordinates.txt')
-
-        image = cv2.imread(f'/home/egor/Work/Room-navigation/building/{address}/image/level_{room_level}.jpg')
-
         end_room = get_room_number("", end_room, address, room_level, d)
-
-        # print(start_room_name, end_room)
-
         path = dijkstra(graph, start_room_name, end_room)
-        print(f"Кратчайший путь: {path}")
-
-        result_image = draw_path_on_map(image, path, coordinates)
-
-        output_file = f'building/{address}/image/level_path_{room_level}.png'
-        cv2.imwrite(output_file, result_image)
-        os.system(f'xdg-open {output_file}')
 
     else:
-        graph = graph_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/level_{room_level}/graph.txt')
-        coordinates = coordinates_from_file(f'/home/egor/Work/Room-navigation/building/{address}/graph/level_{room_level}/coordinates.txt')
-
-        image = cv2.imread(f'/home/egor/Work/Room-navigation/building/{address}/image/level_{room_level}.jpg')
-
         start_room, end_room = get_room_number(start_room_name, end_room, address, room_level, {})
-
         path = dijkstra(graph, start_room, end_room)
-        print(f"Кратчайший путь: {path}")
 
-        result_image = draw_path_on_map(image, path, coordinates)
+    
+    result_image = draw_path_on_map(image, path, coordinates)
 
-        output_file = f'building/{address}/image/level_path_{room_level}.png'
-        cv2.imwrite(output_file, result_image)
-        os.system(f'xdg-open {output_file}') 
+    output_file = f'building/{address}/image/level_path_{room_level}.png'
+    cv2.imwrite(output_file, result_image)
+    os.system(f'xdg-open {output_file}') 
 
 
+# Функция для проверки объекта в файле
 def check_in_list(name, file):
     d = {}
     with open(file, encoding="utf-8") as file:
@@ -369,6 +328,7 @@ def check_in_list(name, file):
     return False
 
 
+# Функция для обработки данных пользователя и выполнения отсльных функций (основная функция)
 def processing_data_user_and_image():
     building_dir = os.listdir("/home/egor/Work/Room-navigation/building/")
     print(building_dir)
@@ -388,15 +348,24 @@ def processing_data_user_and_image():
         start_room_level = int(input("Введите номер этажа первой комнаты: "))
         end_room_name = input("Введите название конечной комнаты: ").lower()
         end_room_level = int(input("Введите номер этажа второй комнаты: "))
+        is_ladder = input("Какой вид смены этажей у вас(лифт, лестница): ").lower()
+
+        if similar(is_ladder, "лифт") == True:
+            is_ladder == "лифт"
+        elif similar(is_ladder, "лестница") == True:
+            is_ladder == "лестница"
+        else:
+            return 0
+
 
         if start_room_level != end_room_level:
             for i in range(1, 3):
                 if i == 1:
-                    test = checking_nearby_points("лестница", start_room_name, start_room_level, address)
-                    print(test)
-                    save_image(address, start_room_level,  start_room_name, checking_nearby_points("лестница", start_room_name, start_room_level, address))
+                    # test = checking_nearby_points("лестница", start_room_name, start_room_level, address)
+                    # print(test)
+                    save_image(address, start_room_level,  start_room_name, checking_nearby_points(is_ladder, start_room_name, start_room_level, address))
                 else:
-                    save_image(address, end_room_level,  checking_nearby_points("лестница", start_room_name, start_room_level, address), end_room_name)
+                    save_image(address, end_room_level,  checking_nearby_points(is_ladder, start_room_name, start_room_level, address), end_room_name)
         else:
             save_image(address, start_room_level, start_room_name, end_room_name)
 
